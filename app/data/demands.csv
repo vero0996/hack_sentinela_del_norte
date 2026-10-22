@@ -1,0 +1,9 @@
+source,target,demand_gbps
+UK,GR,60
+DE,ES,45
+FR,PL,30
+NL,IT,70
+SE,AT,25
+IE,HU,15
+PT,FI,10
+IL,DE,35
