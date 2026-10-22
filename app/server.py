@@ -141,8 +141,9 @@ def build_scenario(scenario, disabled=()):
     node_list = []
     for i, node in enumerate(nodes):
         lat, lon = float(node["lat"]), float(node["lon"])
+        in_domain = domain["lat_min"] <= lat <= domain["lat_max"] and domain["lon_min"] <= lon <= domain["lon_max"]
         node_list.append({"index": i, "id": node["id"], "name": node["name"], "city": node["city"],
-                          "lat": lat, "lon": lon, "xy": project(lat, lon, lat0)})
+                          "lat": lat, "lon": lon, "xy": project(lat, lon, lat0), "in_domain": in_domain})
 
     tsp_ids = [node["id"] for node in nodes] if scenario["tsp"]["nodes"] == "all" else scenario["tsp"]["nodes"]
     start = scenario["tsp"]["start"]
@@ -158,7 +159,7 @@ def build_scenario(scenario, disabled=()):
     lower = project(domain["lat_min"], domain["lon_min"], lat0)
     upper = project(domain["lat_max"], domain["lon_max"], lat0)
 
-    demands = [{"source": row["source"], "target": row["target"], "demand_gbps": int(row["demand_gbps"])}
+    demands = [{"source": row["source"], "target": row["target"], "demand_gbps": float(row["demand_gbps"])}
                for row in read_csv("demands.csv")]
 
     return {
@@ -180,13 +181,29 @@ def normalize(text):
     return "".join(text.split()).upper()
 
 
+def resolve_link(link_text, nodes):
+    """Traduce 'Austria – Suiza' (formato de mapping.csv) a los ids de las dos centrales."""
+    by_name = {}
+    for node in nodes:
+        for name in (node["name"], node["name_es"], node["id"]):
+            by_name[name.strip().lower()] = node["id"]
+    parts = [part.strip().lower() for part in link_text.replace("—", "–").replace(" - ", "–").split("–")]
+    ids = [by_name.get(part) for part in parts]
+    return ids if len(ids) == 2 and all(ids) else [None, None]
+
+
 def load_transmissions():
     raw = {name: (DATA_DIR / name).read_text(encoding="utf-8")
            for name in ("transmission1.txt", "transmission2.txt", "mcode1.txt", "mcode2.txt", "mcode3.txt")}
+    nodes = read_csv("nodes.csv")
+    mapping = []
+    for row in read_csv("mapping.csv"):
+        link_u, link_v = resolve_link(row["link"], nodes)
+        mapping.append({**row, "link_u": link_u, "link_v": link_v})
     return {
         "transmissions": [normalize(raw["transmission1.txt"]), normalize(raw["transmission2.txt"])],
         "codes": [normalize(raw[f"mcode{i}.txt"]) for i in (1, 2, 3)],
-        "mapping": read_csv("mapping.csv"),
+        "mapping": mapping,
         "note": "mapping.csv es una construccion de simulacion: detectar una firma no confirma una infeccion real.",
     }
 

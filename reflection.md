@@ -1,10 +1,10 @@
 # Reflexión técnica — SENTINELA DEL NORTE
 
 TC2038 Análisis y Diseño de Algoritmos Avanzados · Hackathon integrador
-Equipo: ver `team.txt` · Fuente del documento `ReflexSENTINEL_A0XXXXXXX.pdf`
+Equipo: ver `team.txt` · Fuente del documento `ReflexSENTINEL_A01255674.pdf`
 
 > Todas las cifras de este documento provienen de `results/benchmarks.md` (generado con
-> `make bench`), de `test/grader_check.py` y del Digital Twin (`make app`). Equipo de
+> `make bench`), de `tests/grader_check.py` y del Digital Twin (`make app`). Equipo de
 > medición: Apple M4, 24 GiB, macOS (Darwin 27), Apple clang 21, `-std=c++17 -O2`.
 
 ---
@@ -72,8 +72,8 @@ Para cada problema se implementaron **dos técnicas** en C++ y se verificó que 
   La heurística escala como n^2.01 (2.8 ms con 800 nodos).
 - **Validación.** En 100 instancias euclidianas aleatorias la heurística nunca es mejor que
   el exacto (sería imposible); en 450 puntos sobre un círculo encuentra el perímetro óptimo.
-  En la red completa (30 centrales) la ruta aproximada mide 16 372 km; en la instancia de 10
-  centrales el óptimo exacto es 2 963 km.
+  En la red SNDlib completa (22 centrales, incluida Nueva York) la ruta aproximada mide
+  29 761 km; en la instancia de 10 centrales de Europa central el óptimo exacto es 3 752 km.
 
 ### 2.3 Flujo máximo
 
@@ -112,7 +112,8 @@ Para cada problema se implementaron **dos técnicas** en C++ y se verificó que 
   la mejora natural es un índice espacial (rejilla o k-d tree) para obtener vecinos en orden.
 - **Propiedades verificadas sin conocer la respuesta:** las áreas suman el área del dominio,
   cada celda contiene su sitio y cada vértice no está más cerca de otro sitio que del propio.
-  La consulta de ubicación (`nearestSite`, O(n)) asigna los 43 países a 27 centrales.
+  La consulta de ubicación (`nearestSite`, O(n)) asigna los 43 países a 18 de las 22 centrales;
+  Nueva York queda fuera del dominio europeo y su región recortada es vacía (caso límite real).
 
 ### 2.5 Búsqueda de firmas
 
@@ -172,7 +173,7 @@ cadena vacía, sin caracteres comunes) están documentados en `results/benchmark
 
 ## 3. Validación contra el autograder
 
-`test/grader_check.py` replica los generadores, las referencias y los validadores del
+`tests/grader_check.py` replica los generadores, las referencias y los validadores del
 autograder del sitio (perfiles lite, normal y huge) y su linter de estilo. Resultado:
 **400/400 casos funcionales**, **21/21 pruebas de estrés** (la más lenta, 0.16 s en nativo frente
 a un límite de 18 s en wasm) y **5/5 en estilo**. Las siete suites unitarias (`make test`) pasan
@@ -206,33 +207,44 @@ tiempo de algoritmo y total.
 
 ### Blackout Scenario
 
-El escenario `blackout-bg-gr` elimina el enlace Sofía–Atenas, que pertenece al MST y al corte
-mínimo Londres → Atenas:
+En la topología SNDlib, Grecia solo tiene dos enlaces (DE–GR y GR–IT, 40 Gbps cada uno). El
+escenario `blackout-gr-it` elimina GR–IT, que pertenece al MST y al corte mínimo Londres → Atenas:
 
-| Indicador | Línea base | Blackout BG–GR |
+| Indicador | SNDlib base | Blackout GR–IT |
 |---|---:|---:|
-| MST | 10 591 km | 11 528 km (+8.8 %) |
-| Ruta de mantenimiento (30 centrales, aproximada) | 16 372 km | 17 984 km (+9.8 %) |
-| Flujo máximo Londres → Atenas | 90 Gbps | 50 Gbps |
-| Corte mínimo | BG–GR, IT–GR, GR–IL | IT–GR, GR–IL |
-| Demanda UK → GR (60 Gbps) | cubierta | **no cubierta** |
+| MST | 16 240 km | 16 581 km (+2.1 %) |
+| Ruta de mantenimiento (22 centrales, aproximada) | 29 761 km | 30 059 km (+1.0 %) |
+| Flujo máximo Londres → Atenas | 80 Gbps | 40 Gbps |
+| Corte mínimo | DE–GR, GR–IT | DE–GR |
 
-El corte mínimo indica exactamente dónde invertir: en el escenario `capacity-upgrade` los
-enlaces hacia Grecia pasan a 100 Gbps y el flujo sube a 220 Gbps; el cuello de botella se
-desplaza a HU–RO, RS–BG, IT–GR e IT–IL.
+Grecia queda con un solo enlace: un segundo fallo la aislaría. El corte mínimo indica dónde
+invertir: en el escenario `mixed-capacity` los dos enlaces hacia Grecia pasan a 100 Gbps y el
+flujo Londres → Atenas sube de 80 a 200 Gbps.
+
+**Capacidad ≠ demanda.** La matriz de demandas de SNDlib (pico escalado, 3 Tbps en total) supera
+las capacidades de módulo en algunos pares: la mayor demanda es Suiza → Francia con 241 Gbps,
+pero el flujo máximo CH → FR es 120 Gbps (corte AT–CH, CH–FR, CH–IT: los tres enlaces de Suiza).
+Ningún enrutamiento puede cubrirla sin agregar capacidad; la demanda UK → GR (0.16 Gbps) sí se
+cubre en todos los escenarios.
 
 ---
 
 ## 5. Datos y trazabilidad
 
-- **SNDlib es el único dataset externo previsto.** No contamos con los archivos oficiales, por
-  lo que el Digital Twin usa **datos sintéticos** generados por `app/data/generate_data.py`
-  (semilla fija): 30 centrales en coordenadas reales de ciudades, modeladas a partir del conjunto
-  de nodos de la red `geant` de SNDlib (sin NY) más centrales nórdicas, bálticas y balcánicas.
-  Los enlaces son plausibles, no la topología oficial. Costos = distancia geodésica (haversine).
-- Capacidades (10/40/100 Gbps), demandas, escenarios, transmisiones y `mapping.csv` son
-  **construcciones de simulación**; la interfaz lo indica. Detectar una firma no confirma una
-  infección real.
+`app/data/generate_data.py` (reproducible) separa tres categorías:
+
+- **Datos reales sin modificar:** `app/data/sndlib/geant.txt`, la instancia `geant` de SNDlib
+  (único dataset externo): 22 nodos con coordenadas, 36 enlaces con módulo de 40 000 Mbit/s y
+  462 demandas en Mbit/s (Uhlig/TOTEM, 2005).
+- **Transformaciones:** ids cortos (`at1.at` → `AT`), nombres de país y ciudad; costo = distancia
+  geodésica haversine entre las coordenadas SNDlib, como pide el reto (el costo de módulo de
+  SNDlib se conserva en `edges.csv` y coincide casi exactamente: 804 vs 803.8 km en AT–CH);
+  capacidad base 40 Gbps; demandas convertidas a Gbps.
+- **Simulación:** capacidades de 10/100 Gbps, enlaces caídos y configuraciones de
+  `scenarios.json`; transmisiones, firmas y `mapping.csv` (mismo formato
+  `transmission,link,scenario,status` que publica el sitio). No contamos con el paquete oficial
+  del reto (costos, capacidades, escenarios y transmisiones), por lo que estos archivos son
+  propios; la interfaz lo indica. Detectar una firma no confirma una infección real.
 - Mapa base: Natural Earth (dominio público) vía world-atlas (ISC); Leaflet (BSD-2), incluido
   localmente para funcionar sin internet.
 
@@ -269,7 +281,8 @@ desplaza a HU–RO, RS–BG, IT–GR e IT–IL.
   Or-opt o Lin–Kernighan mejorarían la calidad.
 - La memoria medida incluye el árbol JSON de la entrada (p. ej. 166 MB para 224 000 aristas):
   un lector JSON en streaming la reduciría.
-- Los datos de red son sintéticos; con los archivos oficiales solo se sustituyen los CSV.
+- Capacidades de escenario y transmisiones son simuladas; con el paquete oficial del reto solo se
+  sustituyen los CSV y los `.txt` de `app/data/`.
 
 ---
 
@@ -278,9 +291,9 @@ desplaza a HU–RO, RS–BG, IT–GR e IT–IL.
 | Integrante | Matrícula | Contribución principal |
 |---|---|---|
 | Verónica Paola Zapata Sánchez | A01199193 | Network Optimization (MST, TSP) |
-| _Nombre 2_ | A0XXXXXXX | Flow & Computational Geometry (flujo, Voronoi) |
-| _Nombre 3_ | A0XXXXXXX | Cybersecurity Algorithms (firmas, palíndromos, subcadena común) |
-| _Nombre 4_ | A0XXXXXXX | System Integration & Validation (app, pruebas, benchmarks) |
+| Luis Álvaro Rosales Sálazar | A01255674 | Flow & Computational Geometry (flujo, Voronoi) |
+| Fernando Hernandez Cantú | A00841856 | Cybersecurity Algorithms (firmas, palíndromos, subcadena común) |
+| Alfonso José Morales Mallozzi | A00841550 | System Integration & Validation (app, pruebas, benchmarks) |
 
 ### Reflexiones individuales
 

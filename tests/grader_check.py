@@ -5,7 +5,7 @@ Replica las referencias, generadores y validadores del autograder del sitio
 
 Uso:
     g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic src/main.cpp -o sentinel
-    python3 test/grader_check.py ./sentinel [src/main.cpp]
+    python3 tests/grader_check.py ./sentinel [src/main.cpp]
 """
 import json
 import math

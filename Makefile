@@ -2,7 +2,7 @@
 CXX ?= c++
 CXXFLAGS = -std=c++17 -O2 -Wall -Wextra -Wpedantic
 TESTS = mst tsp max_flow voronoi matching palindrome common_substring
-SAMPLES = test/samples
+SAMPLES = tests/samples
 
 .PHONY: all test bench app data grader-zip deliverable-zip clean
 
@@ -16,11 +16,11 @@ sentinel: src/main.cpp $(wildcard src/*.h)
 test: sentinel
 	@mkdir -p build
 	@for t in $(TESTS); do \
-		$(CXX) $(CXXFLAGS) test/test_$$t.cpp -o build/test_$$t || exit 1; \
+		$(CXX) $(CXXFLAGS) tests/test_$$t.cpp -o build/test_$$t || exit 1; \
 		./build/test_$$t > build/test_$$t.log || { cat build/test_$$t.log; exit 1; }; \
 		tail -1 build/test_$$t.log; \
 	done
-	python3 test/grader_check.py ./sentinel src/main.cpp
+	python3 tests/grader_check.py ./sentinel src/main.cpp
 	./sentinel $(SAMPLES)/transmission1.txt $(SAMPLES)/transmission2.txt $(SAMPLES)/mcode1.txt $(SAMPLES)/mcode2.txt $(SAMPLES)/mcode3.txt | diff - $(SAMPLES)/expected_output.txt
 	@echo "Modo archivos coincide con $(SAMPLES)/expected_output.txt"
 
@@ -39,13 +39,13 @@ data:
 # ZIP para el autograder: exactamente un .cpp (src/main.cpp).
 grader-zip:
 	@mkdir -p dist && rm -f dist/sentinela_grader.zip
-	zip -qr dist/sentinela_grader.zip src README.md team.txt test -x 'test/*.cpp' '*.DS_Store' '*__pycache__*'
+	zip -qr dist/sentinela_grader.zip src README.md team.txt tests -x 'tests/*.cpp' '*.DS_Store' '*__pycache__*'
 	@unzip -l dist/sentinela_grader.zip | tail -1
 
 # Paquete completo para Canvas (incluye app, pruebas, resultados y reflexion).
 deliverable-zip:
 	@mkdir -p dist && rm -f dist/sentinela_entrega.zip
-	zip -qr dist/sentinela_entrega.zip src app test bench results README.md team.txt reflection.md Makefile -x '*.DS_Store' '*__pycache__*'
+	zip -qr dist/sentinela_entrega.zip src app tests bench results README.md team.txt reflection.md Makefile -x '*.DS_Store' '*__pycache__*'
 	@unzip -l dist/sentinela_entrega.zip | tail -1
 
 clean:

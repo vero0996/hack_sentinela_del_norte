@@ -15,9 +15,9 @@
 // Modo archivos: ./sentinel transmission1.txt transmission2.txt mcode1.txt mcode2.txt mcode3.txt
 //
 // Autores: Equipo SENTINELA DEL NORTE (ver team.txt)
-// Matriculas: A0XXXXXXX, A0XXXXXXX, A0XXXXXXX, A0XXXXXXX
+// Matriculas: A01199193, A00841856, A01255674, A00841550
 // Fecha de creacion: 2026-10-21
-// Ultima modificacion: 2026-10-21
+// Ultima modificacion: 2026-10-22
 //
 // Compilacion: g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic src/main.cpp -o sentinel
 // Uso: ./sentinel < entrada.json

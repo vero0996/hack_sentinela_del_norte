@@ -1,10 +1,10 @@
 {
-  "note": "Escenarios sinteticos de simulacion. No provienen de SNDlib.",
+  "note": "Topologia, coordenadas, capacidad base (40 Gbps) y demandas: SNDlib geant. Costos = distancia geodesica. Capacidades 10/100 Gbps, fallas y transmisiones: simulacion.",
   "scenarios": [
     {
-      "id": "baseline",
-      "name": "Linea base",
-      "description": "Red completa con capacidades de 10, 40 y 100 Gbps.",
+      "id": "sndlib-base",
+      "name": "SNDlib GEANT (base)",
+      "description": "Topologia real de SNDlib; todos los enlaces con el modulo SNDlib de 40 Gbps.",
       "flow": {
         "source": "UK",
         "sink": "GR"
@@ -22,6 +22,115 @@
         }
       },
       "capacity_overrides": [],
+      "removed_links": []
+    },
+    {
+      "id": "mixed-capacity",
+      "name": "Capacidades mixtas (simulado)",
+      "description": "Troncales (incluidos los dos enlaces hacia Grecia) a 100 Gbps y enlaces perifericos a 10 Gbps sobre la topologia SNDlib.",
+      "flow": {
+        "source": "UK",
+        "sink": "GR"
+      },
+      "tsp": {
+        "start": "AT",
+        "nodes": "all"
+      },
+      "voronoi": {
+        "domain": {
+          "lon_min": -25,
+          "lat_min": 30,
+          "lon_max": 45,
+          "lat_max": 72
+        }
+      },
+      "capacity_overrides": [
+        {
+          "u": "UK",
+          "v": "NL",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "UK",
+          "v": "FR",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "DE",
+          "v": "NL",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "DE",
+          "v": "FR",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "CH",
+          "v": "FR",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "CH",
+          "v": "IT",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "DE",
+          "v": "IT",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "AT",
+          "v": "DE",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "CZ",
+          "v": "DE",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "DE",
+          "v": "GR",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "GR",
+          "v": "IT",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "IE",
+          "v": "UK",
+          "capacity_gbps": 10
+        },
+        {
+          "u": "PT",
+          "v": "UK",
+          "capacity_gbps": 10
+        },
+        {
+          "u": "IL",
+          "v": "NL",
+          "capacity_gbps": 10
+        },
+        {
+          "u": "SE",
+          "v": "UK",
+          "capacity_gbps": 10
+        },
+        {
+          "u": "HR",
+          "v": "HU",
+          "capacity_gbps": 10
+        },
+        {
+          "u": "LU",
+          "v": "FR",
+          "capacity_gbps": 10
+        }
+      ],
       "removed_links": []
     },
     {
@@ -59,48 +168,9 @@
       "removed_links": []
     },
     {
-      "id": "capacity-upgrade",
-      "name": "Mejora de capacidad",
-      "description": "Los enlaces hacia Grecia pasan a 100 Gbps.",
-      "flow": {
-        "source": "UK",
-        "sink": "GR"
-      },
-      "tsp": {
-        "start": "AT",
-        "nodes": "all"
-      },
-      "voronoi": {
-        "domain": {
-          "lon_min": -25,
-          "lat_min": 30,
-          "lon_max": 45,
-          "lat_max": 72
-        }
-      },
-      "capacity_overrides": [
-        {
-          "u": "IT",
-          "v": "GR",
-          "capacity_gbps": 100
-        },
-        {
-          "u": "BG",
-          "v": "GR",
-          "capacity_gbps": 100
-        },
-        {
-          "u": "GR",
-          "v": "IL",
-          "capacity_gbps": 100
-        }
-      ],
-      "removed_links": []
-    },
-    {
-      "id": "blackout-bg-gr",
-      "name": "Blackout BG-GR",
-      "description": "Falla el enlace Sofia-Atenas (en el MST y en el corte minimo): recalculo de MST, flujo y corte.",
+      "id": "blackout-gr-it",
+      "name": "Blackout GR-IT (simulado)",
+      "description": "Falla el enlace Atenas-Milan (en el MST y en el corte minimo): recalculo de MST, flujo y corte.",
       "flow": {
         "source": "UK",
         "sink": "GR"
@@ -120,8 +190,8 @@
       "capacity_overrides": [],
       "removed_links": [
         {
-          "u": "BG",
-          "v": "GR"
+          "u": "GR",
+          "v": "IT"
         }
       ]
     }

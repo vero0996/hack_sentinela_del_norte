@@ -21,11 +21,12 @@ make deliverable-zip  # dist/sentinela_entrega.zip (paquete completo para Canvas
 
 ```
 src/          núcleo C++: main.cpp + encabezados (header-only)
-app/          Digital Twin: server.py, static/ (HTML/JS/Leaflet), data/ (datos sintéticos)
-test/         pruebas unitarias C++, grader_check.py, samples/ del modo archivos
+app/          Digital Twin: server.py, static/ (HTML/JS/Leaflet), data/ (SNDlib geant + simulación)
+tests/        pruebas unitarias C++, grader_check.py, samples/ del modo archivos
 bench/        benchmark.py
 results/      benchmarks.md, benchmarks.csv, environment.md
 reflection.md fuente de ReflexSENTINEL_….pdf
+defense.md    guía de estudio para la defensa técnica
 ```
 
 ## Arquitectura
@@ -91,7 +92,7 @@ imprime el formato de texto de la especificación (9 líneas):
 2. 2 líneas `<inicio> <fin>`: palíndromo más largo de cada transmisión.
 3. 1 línea `<inicio> <fin>`: subcadena común más larga, en transmission1.
 
-Ejemplo verificable en `test/samples/` (`expected_output.txt`).
+Ejemplo verificable en `tests/samples/` (`expected_output.txt`).
 
 ## Pruebas
 
@@ -99,16 +100,16 @@ Ejemplo verificable en `test/samples/` (`expected_output.txt`).
 make test
 # equivalente manual:
 for t in mst tsp max_flow voronoi matching palindrome common_substring; do
-  g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic test/test_$t.cpp -o test_$t && ./test_$t
+  g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic tests/test_$t.cpp -o test_$t && ./test_$t
 done
-python3 test/grader_check.py ./sentinel src/main.cpp
+python3 tests/grader_check.py ./sentinel src/main.cpp
 ```
 
-`test/grader_check.py` replica las referencias, generadores (perfiles lite,
+`tests/grader_check.py` replica las referencias, generadores (perfiles lite,
 normal y huge) y validadores del autograder para los siete modos, además del
 linter de estilo aplicado a `main.cpp`.
 
-> Los archivos `test/*.cpp` no deben incluirse en el ZIP de entrega: el
+> Los archivos `tests/*.cpp` no deben incluirse en el ZIP de entrega: el
 > autograder exige exactamente un `.cpp` (`src/main.cpp`).
 
 ## Network Optimization
@@ -234,12 +235,12 @@ están incluidos en `app/static/vendor/`).
   aleatoria, verificación de consistencia y curva de escalabilidad.
 - **Cybersecurity Console:** firmas, palíndromo y subcadena común resaltados;
   salida de 9 líneas; correspondencia de simulación enlazada al mapa.
-- **Scenario Manager:** escenarios predefinidos (incluye el *Blackout* BG–GR),
+- **Scenario Manager:** escenarios predefinidos (incluye el *Blackout* GR–IT),
   desactivar enlaces, cargar un escenario JSON (plantilla descargable) y
   comparar indicadores entre escenarios; registro de ejecuciones del núcleo.
 
 Enlaces directos para la demo: `/#overlay=flow`,
-`/#scenario=blackout-bg-gr&overlay=flow`, `/#tab=cyber`,
+`/#scenario=blackout-gr-it&overlay=flow`, `/#tab=cyber`,
 `/#tab=lab&labmode=common&lab=scale`.
 
 ## Benchmarks (`results/`)
@@ -254,18 +255,28 @@ procedimiento quedan en `results/environment.md`. El análisis está en
 
 ## Validación pendiente
 
-- Sustituir los datos sintéticos por los archivos oficiales cuando estén disponibles.
+- Sustituir los CSV por el paquete oficial del reto (costos, capacidades,
+  escenarios y transmisiones) cuando esté disponible.
 - Completar `team.txt`, las matrículas de `src/main.cpp` y la sección de
   contribuciones de `reflection.md`; exportar `reflection.md` a PDF.
 
 ## Trazabilidad de datos
 
-- **Datos de red sintéticos** (`app/data/`, generados por
-  `app/data/generate_data.py`): 30 centrales en coordenadas reales de ciudades,
-  modeladas a partir del conjunto de nodos de la red `geant` de SNDlib (sin NY)
-  más centrales nórdicas, bálticas y balcánicas. Enlaces plausibles (no la
-  topología oficial), costo = distancia geodésica. No son datos de SNDlib.
-- Capacidades, demandas, escenarios, transmisiones y `mapping.csv` son
-  construcciones de simulación; detectar una firma no confirma una infección.
+`app/data/generate_data.py` (reproducible) separa tres categorías:
+
+- **Datos reales, sin modificar:** `app/data/sndlib/geant.txt`, instancia
+  `geant` de SNDlib (https://sndlib.put.poznan.pl, formato nativo v1.0): 22
+  nodos con coordenadas, 36 enlaces con módulo de 40 000 Mbit/s y 462 demandas
+  en Mbit/s (Uhlig/TOTEM, 2005).
+- **Transformaciones:** ids cortos (`at1.at` → `AT`), nombres de país y ciudad;
+  costo = distancia geodésica haversine en km entre las coordenadas SNDlib (el
+  reto pide distancias geodésicas; el costo de módulo SNDlib se conserva en
+  `edges.csv` como `sndlib_module_cost` y coincide casi exactamente); capacidad
+  base = 40 Gbps; demandas convertidas a Gbps (`demands.csv` conserva Mbit/s).
+- **Simulación (no SNDlib):** capacidades de 10/100 Gbps, enlaces caídos y
+  configuraciones de `scenarios.json`; transmisiones, firmas `mcode` y
+  `mapping.csv` (mismo formato que el botón “Descargar mapping.csv” del sitio:
+  `transmission,link,scenario,status`); centroides de países en
+  `countries.csv`. Detectar una firma no confirma una infección.
 - Mapa base: Natural Earth (dominio público) vía world-atlas@2.0.2 (ISC),
   generado con `app/data/build_basemap.py`. Leaflet 1.9.4 (BSD-2, `app/static/vendor/leaflet/LICENSE`).

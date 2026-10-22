@@ -104,7 +104,7 @@ function escapeHtml(text) {
 // ------------------------------------------------------------------ mapa
 
 const map = L.map("map", { zoomControl: true, attributionControl: true, zoomSnap: 0.25, minZoom: 3, maxZoom: 9 }).setView([50, 14], 4);
-map.attributionControl.addAttribution("Contornos: Natural Earth (dominio público) · datos de red sintéticos");
+map.attributionControl.addAttribution("Red: SNDlib geant · contornos: Natural Earth (dominio público)");
 
 // Mapa base offline: contornos de paises (no requiere internet ni llaves de API).
 fetch("vendor/europe-countries.geojson")
@@ -283,7 +283,7 @@ async function overlayFlow() {
   const sinkId = state.data.nodes[sink].id;
   const demand = state.data.demands.find((d) => d.source === sourceId && d.target === sinkId);
   const demandHtml = demand
-    ? `<div class="metric"><span>Demanda ${sourceId} → ${sinkId}</span><b>${demand.demand_gbps} Gbps
+    ? `<div class="metric"><span>Demanda SNDlib ${sourceId} → ${sinkId}</span><b>${fmt(demand.demand_gbps, 3)} Gbps
        <span class="badge ${result.flow >= demand.demand_gbps ? "ok" : "danger"}">${result.flow >= demand.demand_gbps ? "cubierta" : "excede la capacidad"}</span></b></div>`
     : `<p class="muted small">No hay demanda registrada para este par (capacidad ≠ demanda).</p>`;
   const cutCapacity = cutLinks.reduce((sum, edge) => sum + edge.capacity, 0);
@@ -306,6 +306,9 @@ async function overlayVoronoi() {
   const countries = state.data.voronoi.countries;
   const result = await runCore("voronoi", voronoiInput(countries.map((c) => c.xy)), "pruned");
   result.cells.forEach((cell, i) => {
+    if (cell.length === 0) {
+      return;
+    }
     const hue = (i * 137.508) % 360;
     L.polygon(cell.map(unproject), { color: `hsl(${hue} 70% 60%)`, weight: 1, fillOpacity: 0.16 })
       .bindTooltip(`Región de ${state.data.nodes[i].id} (${escapeHtml(state.data.nodes[i].city)})`)
@@ -316,8 +319,10 @@ async function overlayVoronoi() {
     return `<tr><td>${escapeHtml(country.country)}</td><td>${hub.id} · ${escapeHtml(hub.city)}</td></tr>`;
   }).join("");
   const assigned = new Set(result.owners).size;
+  const outside = state.data.nodes.filter((node, i) => result.cells[i].length === 0).map((node) => node.id);
   setResult(`<div class="big">${countries.length} países</div>
-    <p class="muted">Asignados a ${assigned} centrales por proximidad planar (proyección equirectangular, km), regiones recortadas al dominio.</p>
+    <p class="muted">Asignados a ${assigned} centrales por proximidad planar (proyección equirectangular, km), regiones recortadas al dominio.
+    ${outside.length ? `Sin región dentro del dominio: ${outside.join(", ")}.` : ""}</p>
     ${timingHtml(result)}
     <div class="scroll"><table><tr><th>País</th><th>Central asignada</th></tr>${rows}</table></div>`);
 }
@@ -370,7 +375,7 @@ async function loadScenario() {
   const firstLoad = baseLayer.getLayers().length === 0;
   drawBase();
   if (firstLoad) {
-    map.fitBounds(L.latLngBounds(state.data.nodes.map((node) => [node.lat, node.lon])).pad(0.08));
+    map.fitBounds(L.latLngBounds(state.data.nodes.filter((node) => node.in_domain).map((node) => [node.lat, node.lon])).pad(0.08));
   }
   renderScenarioList();
   renderLinkList();
@@ -844,15 +849,26 @@ async function runCyber() {
     const found = matching.matches[t].map((pos, p) => `mcode${p + 1}: ${pos > 0 ? `pos ${pos}` : "no"}`).join(" · ");
     $(`#cyber-t${t + 1} h2`).textContent = `transmission${t + 1}.txt · ${text.length} caracteres · ${found}`;
   });
+  renderMapping(matching.matches);
 }
 
-function renderMapping() {
+function renderMapping(matches) {
   const { mapping, note } = state.transmissions;
-  const rows = mapping.map((row) => `<tr><td class="mono">${escapeHtml(row.transmission)}</td><td>${escapeHtml(row.link_u)}–${escapeHtml(row.link_v)}</td>
-      <td>${escapeHtml(row.scenario)}</td><td><span class="badge ${row.label === "ddos" ? "danger" : "ok"}">${row.label === "ddos" ? "Tráfico DDoS" : "Tráfico benigno"}</span></td>
-      <td><button class="ghost" data-link="${escapeHtml(row.link_u)},${escapeHtml(row.link_v)}">Ver en mapa</button></td></tr>`).join("");
-  $("#cyber-mapping").innerHTML = `<h2>Correspondencia de simulación</h2>
-    <table><tr><th>Transmisión</th><th>Enlace</th><th>Conexión</th><th>Etiqueta</th><th></th></tr>${rows}</table>
+  const rows = mapping.map((row, t) => {
+    const ddos = /ddos/i.test(row.scenario);
+    let status = escapeHtml(row.status);
+    if (matches && matches[t]) {
+      const found = matches[t].filter((position) => position > 0).length;
+      status = `${found} de ${matches[t].length} firmas detectadas`;
+    }
+    const button = row.link_u
+      ? `<button class="ghost" data-link="${escapeHtml(row.link_u)},${escapeHtml(row.link_v)}">Ver en mapa</button>`
+      : `<span class="muted small">enlace no encontrado</span>`;
+    return `<tr><td class="mono">${escapeHtml(row.transmission)}</td><td>${escapeHtml(row.link)}</td>
+      <td><span class="badge ${ddos ? "danger" : "ok"}">${escapeHtml(row.scenario)}</span></td><td>${status}</td><td>${button}</td></tr>`;
+  }).join("");
+  $("#cyber-mapping").innerHTML = `<h2>Correspondencia de simulación (mapping.csv)</h2>
+    <table><tr><th>Transmisión</th><th>Enlace</th><th>Escenario</th><th>Estado</th><th></th></tr>${rows}</table>
     <p class="muted small">${escapeHtml(note)} Las etiquetas dan contexto; no sustituyen los resultados.</p>`;
   $$("#cyber-mapping [data-link]").forEach((button) => button.addEventListener("click", () => {
     const [u, v] = button.dataset.link.split(",");
@@ -906,7 +922,7 @@ async function init() {
     resetSignatures();
     renderMapping();
     updateLabForm();
-    // Enlaces directos para la demo: #tab=cyber, #scenario=blackout-bg-gr&overlay=flow
+    // Enlaces directos para la demo: #tab=cyber, #scenario=blackout-gr-it&overlay=flow
     const params = new URLSearchParams(location.hash.slice(1));
     if (params.get("scenario") && state.scenarios.some((s) => s.id === params.get("scenario"))) {
       state.scenarioId = params.get("scenario");

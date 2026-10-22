@@ -1,9 +1,21 @@
-"""Genera los datos SINTETICOS del Digital Twin (inspirados en GEANT, no son datos de SNDlib).
+"""Genera los archivos de entrada del Digital Twin a partir de SNDlib GEANT.
 
-- Nodos: centrales nacionales en coordenadas reales de ciudades, tomando como modelo el
-  conjunto de nodos de la red `geant` de SNDlib (sin NY) mas centrales nordicas/balticas/balcanicas.
-- Enlaces: topologia plausible construida a mano; costo = distancia geodesica (haversine, km).
-- Capacidades (10/40/100 Gbps), demandas, escenarios y transmisiones: construcciones de simulacion.
+DATOS REALES (sin modificar, en app/data/sndlib/geant.txt):
+  - SNDlib `geant` (native format v1.0), https://sndlib.put.poznan.pl
+    Topologia (22 nodos, 36 enlaces), coordenadas, capacidad de modulo (40 000 Mbit/s)
+    y matriz de demandas (462 pares, Mbit/s; origen Uhlig/TOTEM, 2005).
+
+TRANSFORMACIONES (documentadas, reproducibles):
+  - Ids cortos (at1.at -> AT), nombres de pais en ingles/espanol y ciudad de cada central.
+  - Costo del enlace = distancia geodesica (haversine, km) entre las coordenadas SNDlib,
+    como indica el reto ("distancias geodesicas ilustrativas"), no el costo de modulo SNDlib
+    (que se conserva en edges.csv para trazabilidad).
+  - Capacidad base = capacidad de modulo SNDlib (40 Gbps); demandas convertidas a Gbps.
+
+CONSTRUCCIONES DE SIMULACION (no son datos de SNDlib):
+  - Escenarios con capacidades de 10/100 Gbps, enlaces caidos y configuraciones de prueba.
+  - Transmisiones hexadecimales, firmas mcode y mapping.csv (formato del sitio del reto).
+  - countries.csv: centroides aproximados de paises para consultas de Voronoi.
 
 Uso: python3 app/data/generate_data.py   (reproducible, semilla fija)
 """
@@ -11,65 +23,44 @@ import csv
 import json
 import math
 import random
+import re
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent
+SNDLIB_FILE = OUT / "sndlib" / "geant.txt"
 SEED = 2038
 EARTH_RADIUS_KM = 6371.0
 
-NODES = [
-    # id, name, city, country, lat, lon
-    ("AT", "Austria", "Vienna", "AT", 48.2082, 16.3738),
-    ("BE", "Belgium", "Brussels", "BE", 50.8503, 4.3517),
-    ("BG", "Bulgaria", "Sofia", "BG", 42.6977, 23.3219),
-    ("CH", "Switzerland", "Geneva", "CH", 46.2044, 6.1432),
-    ("CZ", "Czechia", "Prague", "CZ", 50.0755, 14.4378),
-    ("DE", "Germany", "Frankfurt", "DE", 50.1109, 8.6821),
-    ("DK", "Denmark", "Copenhagen", "DK", 55.6761, 12.5683),
-    ("EE", "Estonia", "Tallinn", "EE", 59.4370, 24.7536),
-    ("ES", "Spain", "Madrid", "ES", 40.4168, -3.7038),
-    ("FI", "Finland", "Helsinki", "FI", 60.1699, 24.9384),
-    ("FR", "France", "Paris", "FR", 48.8566, 2.3522),
-    ("GR", "Greece", "Athens", "GR", 37.9838, 23.7275),
-    ("HR", "Croatia", "Zagreb", "HR", 45.8150, 15.9819),
-    ("HU", "Hungary", "Budapest", "HU", 47.4979, 19.0402),
-    ("IE", "Ireland", "Dublin", "IE", 53.3498, -6.2603),
-    ("IL", "Israel", "Tel Aviv", "IL", 32.0853, 34.7818),
-    ("IT", "Italy", "Milan", "IT", 45.4642, 9.1900),
-    ("LT", "Lithuania", "Vilnius", "LT", 54.6872, 25.2797),
-    ("LU", "Luxembourg", "Luxembourg", "LU", 49.6116, 6.1319),
-    ("LV", "Latvia", "Riga", "LV", 56.9496, 24.1052),
-    ("NL", "Netherlands", "Amsterdam", "NL", 52.3676, 4.9041),
-    ("NO", "Norway", "Oslo", "NO", 59.9139, 10.7522),
-    ("PL", "Poland", "Poznan", "PL", 52.4064, 16.9252),
-    ("PT", "Portugal", "Lisbon", "PT", 38.7223, -9.1393),
-    ("RO", "Romania", "Bucharest", "RO", 44.4268, 26.1025),
-    ("RS", "Serbia", "Belgrade", "RS", 44.7866, 20.4489),
-    ("SE", "Sweden", "Stockholm", "SE", 59.3293, 18.0686),
-    ("SI", "Slovenia", "Ljubljana", "SI", 46.0569, 14.5058),
-    ("SK", "Slovakia", "Bratislava", "SK", 48.1486, 17.1077),
-    ("UK", "United Kingdom", "London", "GB", 51.5074, -0.1278),
-]
-
-LINKS = [
-    ("IE", "UK"), ("UK", "NL"), ("UK", "FR"), ("UK", "BE"), ("UK", "PT"),
-    ("NL", "BE"), ("NL", "DE"), ("NL", "DK"), ("BE", "LU"), ("BE", "FR"),
-    ("LU", "DE"), ("LU", "FR"), ("FR", "CH"), ("FR", "ES"), ("FR", "DE"),
-    ("ES", "PT"), ("ES", "IT"), ("CH", "IT"), ("CH", "DE"), ("CH", "AT"),
-    ("DE", "DK"), ("DE", "CZ"), ("DE", "AT"), ("DE", "PL"), ("DK", "SE"),
-    ("DK", "NO"), ("SE", "NO"), ("SE", "FI"), ("FI", "EE"), ("EE", "LV"),
-    ("LV", "LT"), ("LT", "PL"), ("PL", "CZ"), ("CZ", "SK"), ("CZ", "AT"),
-    ("SK", "AT"), ("SK", "HU"), ("AT", "HU"), ("AT", "SI"), ("AT", "IT"),
-    ("SI", "HR"), ("SI", "IT"), ("HR", "HU"), ("HR", "RS"), ("HU", "RS"),
-    ("HU", "RO"), ("RS", "BG"), ("RO", "BG"), ("BG", "GR"), ("IT", "GR"),
-    ("GR", "IL"), ("IT", "IL"),
-]
-
-# Troncales de 100 Gbps; el resto se asigna 40 o 10 Gbps con la semilla.
-CORE_100G = {
-    ("UK", "NL"), ("UK", "FR"), ("NL", "DE"), ("FR", "DE"), ("DE", "CH"),
-    ("CH", "IT"), ("DE", "AT"), ("AT", "IT"), ("FR", "CH"), ("DE", "CZ"),
+# sndlib id -> (id corto, nombre en ingles, nombre en espanol, ciudad)
+NODE_INFO = {
+    "at1.at": ("AT", "Austria", "Austria", "Vienna"),
+    "be1.be": ("BE", "Belgium", "Belgica", "Brussels"),
+    "ch1.ch": ("CH", "Switzerland", "Suiza", "Geneva"),
+    "cz1.cz": ("CZ", "Czechia", "Chequia", "Prague"),
+    "de1.de": ("DE", "Germany", "Alemania", "Frankfurt"),
+    "es1.es": ("ES", "Spain", "Espana", "Madrid"),
+    "fr1.fr": ("FR", "France", "Francia", "Paris"),
+    "gr1.gr": ("GR", "Greece", "Grecia", "Athens"),
+    "hr1.hr": ("HR", "Croatia", "Croacia", "Zagreb"),
+    "hu1.hu": ("HU", "Hungary", "Hungria", "Budapest"),
+    "ie1.ie": ("IE", "Ireland", "Irlanda", "Dublin"),
+    "il1.il": ("IL", "Israel", "Israel", "Tel Aviv"),
+    "it1.it": ("IT", "Italy", "Italia", "Milan"),
+    "lu1.lu": ("LU", "Luxembourg", "Luxemburgo", "Luxembourg"),
+    "nl1.nl": ("NL", "Netherlands", "Paises Bajos", "Amsterdam"),
+    "ny1.ny": ("NY", "United States", "Estados Unidos", "New York"),
+    "pl1.pl": ("PL", "Poland", "Polonia", "Poznan"),
+    "pt1.pt": ("PT", "Portugal", "Portugal", "Lisbon"),
+    "se1.se": ("SE", "Sweden", "Suecia", "Stockholm"),
+    "si1.si": ("SI", "Slovenia", "Eslovenia", "Ljubljana"),
+    "sk1.sk": ("SK", "Slovakia", "Eslovaquia", "Bratislava"),
+    "uk1.uk": ("UK", "United Kingdom", "Reino Unido", "London"),
 }
+
+# Escenario simulado de capacidades mixtas: troncales a 100 Gbps y enlaces perifericos a 10 Gbps.
+UPGRADED_100G = [("UK", "NL"), ("UK", "FR"), ("DE", "NL"), ("DE", "FR"), ("CH", "FR"),
+                 ("CH", "IT"), ("DE", "IT"), ("AT", "DE"), ("CZ", "DE"), ("DE", "GR"), ("GR", "IT")]
+LEGACY_10G = [("IE", "UK"), ("PT", "UK"), ("IL", "NL"), ("SE", "UK"), ("HR", "HU"), ("LU", "FR")]
 
 COUNTRIES = [
     ("Albania", 41.15, 20.17), ("Andorra", 42.55, 1.60), ("Austria", 47.52, 14.55),
@@ -89,11 +80,6 @@ COUNTRIES = [
     ("United Kingdom", 55.38, -3.44),
 ]
 
-DEMANDS = [
-    ("UK", "GR", 60), ("DE", "ES", 45), ("FR", "PL", 30), ("NL", "IT", 70),
-    ("SE", "AT", 25), ("IE", "HU", 15), ("PT", "FI", 10), ("IL", "DE", 35),
-]
-
 SIGNATURES = {
     "mcode1.txt": "DEADBEEFCAFE",
     "mcode2.txt": "0F1E2D3C4B5A",
@@ -101,8 +87,35 @@ SIGNATURES = {
 }
 
 
-def haversine(a, b):
-    lat1, lon1, lat2, lon2 = map(math.radians, (a[4], a[5], b[4], b[5]))
+def section(text, name):
+    match = re.search(rf"^{name} \((.*?)^\)", text, re.S | re.M)
+    if match is None:
+        raise ValueError(f"Seccion {name} no encontrada en {SNDLIB_FILE}")
+    return [line.strip() for line in match.group(1).splitlines() if line.strip()]
+
+
+def parse_sndlib(path):
+    """Lee nodos, enlaces y demandas del formato nativo de SNDlib."""
+    text = path.read_text(encoding="utf-8")
+    nodes = []
+    for line in section(text, "NODES"):
+        node_id, lon, lat = re.match(r"(\S+) \( (\S+) (\S+) \)", line).groups()
+        nodes.append((node_id, float(lat), float(lon)))
+    links = []
+    for line in section(text, "LINKS"):
+        match = re.match(r"(\S+) \( (\S+) (\S+) \) \S+ \S+ \S+ \S+ \( (\S+) (\S+) \)", line)
+        link_id, source, target, module_capacity, module_cost = match.groups()
+        links.append((link_id, source, target, float(module_capacity), float(module_cost)))
+    demands = []
+    for line in section(text, "DEMANDS"):
+        match = re.match(r"\S+ \( (\S+) (\S+) \) \S+ (\S+)", line)
+        source, target, value = match.groups()
+        demands.append((source, target, float(value)))
+    return nodes, links, demands
+
+
+def haversine(lat1, lon1, lat2, lon2):
+    lat1, lon1, lat2, lon2 = map(math.radians, (lat1, lon1, lat2, lon2))
     h = math.sin((lat2 - lat1) / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2
     return 2 * EARTH_RADIUS_KM * math.asin(math.sqrt(h))
 
@@ -135,87 +148,76 @@ def make_transmissions(rng):
     return t1, t2
 
 
-def main():
-    rng = random.Random(SEED)
-    by_id = {node[0]: node for node in NODES}
+def scenario(scenario_id, name, description, flow, tsp_nodes="all", overrides=(), removed=()):
+    return {
+        "id": scenario_id,
+        "name": name,
+        "description": description,
+        "flow": {"source": flow[0], "sink": flow[1]},
+        "tsp": {"start": "AT", "nodes": tsp_nodes},
+        "voronoi": {"domain": {"lon_min": -25, "lat_min": 30, "lon_max": 45, "lat_max": 72}},
+        "capacity_overrides": [{"u": u, "v": v, "capacity_gbps": c} for u, v, c in overrides],
+        "removed_links": [{"u": u, "v": v} for u, v in removed],
+    }
 
-    write_csv("nodes.csv", ["id", "name", "city", "country", "lat", "lon"], NODES)
+
+def main():
+    sndlib_nodes, sndlib_links, sndlib_demands = parse_sndlib(SNDLIB_FILE)
+    short = {sndlib_id: NODE_INFO[sndlib_id][0] for sndlib_id, _, _ in sndlib_nodes}
+    coords = {sndlib_id: (lat, lon) for sndlib_id, lat, lon in sndlib_nodes}
+
+    write_csv("nodes.csv", ["id", "sndlib_id", "name", "name_es", "city", "lat", "lon"], [
+        (info[0], sndlib_id, info[1], info[2], info[3], coords[sndlib_id][0], coords[sndlib_id][1])
+        for sndlib_id, info in ((n[0], NODE_INFO[n[0]]) for n in sndlib_nodes)
+    ])
 
     edges, capacities = [], []
-    for u, v in LINKS:
-        distance = haversine(by_id[u], by_id[v])
-        edges.append((u, v, round(distance, 1), round(distance)))
-        core = (u, v) in CORE_100G or (v, u) in CORE_100G
-        capacities.append((u, v, 100 if core else rng.choice([10, 40, 40])))
-    write_csv("edges.csv", ["u", "v", "distance_km", "cost"], edges)
+    for link_id, source, target, module_capacity, module_cost in sndlib_links:
+        distance = haversine(*coords[source], *coords[target])
+        edges.append((short[source], short[target], link_id, round(distance, 1), round(distance), module_cost))
+        capacities.append((short[source], short[target], round(module_capacity / 1000)))
+    write_csv("edges.csv", ["u", "v", "sndlib_link", "distance_km", "cost", "sndlib_module_cost"], edges)
     write_csv("capacities.csv", ["u", "v", "capacity_gbps"], capacities)
-    write_csv("demands.csv", ["source", "target", "demand_gbps"], DEMANDS)
+    write_csv("demands.csv", ["source", "target", "demand_mbps", "demand_gbps"], [
+        (short[s], short[t], value, round(value / 1000, 3)) for s, t, value in sndlib_demands
+    ])
     write_csv("countries.csv", ["country", "lat", "lon"], COUNTRIES)
 
-    domain = {"lon_min": -25, "lat_min": 30, "lon_max": 45, "lat_max": 72}
     scenarios = {
-        "note": "Escenarios sinteticos de simulacion. No provienen de SNDlib.",
+        "note": ("Topologia, coordenadas, capacidad base (40 Gbps) y demandas: SNDlib geant. "
+                 "Costos = distancia geodesica. Capacidades 10/100 Gbps, fallas y transmisiones: simulacion."),
         "scenarios": [
-            {
-                "id": "baseline",
-                "name": "Linea base",
-                "description": "Red completa con capacidades de 10, 40 y 100 Gbps.",
-                "flow": {"source": "UK", "sink": "GR"},
-                "tsp": {"start": "AT", "nodes": "all"},
-                "voronoi": {"domain": domain},
-                "capacity_overrides": [],
-                "removed_links": [],
-            },
-            {
-                "id": "small-tsp",
-                "name": "Ruta corta (TSP exacto)",
-                "description": "Mantenimiento de 10 centrales de Europa central: Held-Karp exacto.",
-                "flow": {"source": "DE", "sink": "HU"},
-                "tsp": {"start": "AT", "nodes": ["AT", "DE", "CH", "IT", "SI", "HR", "HU", "SK", "CZ", "PL"]},
-                "voronoi": {"domain": domain},
-                "capacity_overrides": [],
-                "removed_links": [],
-            },
-            {
-                "id": "capacity-upgrade",
-                "name": "Mejora de capacidad",
-                "description": "Los enlaces hacia Grecia pasan a 100 Gbps.",
-                "flow": {"source": "UK", "sink": "GR"},
-                "tsp": {"start": "AT", "nodes": "all"},
-                "voronoi": {"domain": domain},
-                "capacity_overrides": [
-                    {"u": "IT", "v": "GR", "capacity_gbps": 100},
-                    {"u": "BG", "v": "GR", "capacity_gbps": 100},
-                    {"u": "GR", "v": "IL", "capacity_gbps": 100},
-                ],
-                "removed_links": [],
-            },
-            {
-                "id": "blackout-bg-gr",
-                "name": "Blackout BG-GR",
-                "description": "Falla el enlace Sofia-Atenas (en el MST y en el corte minimo): recalculo de MST, flujo y corte.",
-                "flow": {"source": "UK", "sink": "GR"},
-                "tsp": {"start": "AT", "nodes": "all"},
-                "voronoi": {"domain": domain},
-                "capacity_overrides": [],
-                "removed_links": [{"u": "BG", "v": "GR"}],
-            },
+            scenario("sndlib-base", "SNDlib GEANT (base)",
+                     "Topologia real de SNDlib; todos los enlaces con el modulo SNDlib de 40 Gbps.",
+                     ("UK", "GR")),
+            scenario("mixed-capacity", "Capacidades mixtas (simulado)",
+                     "Troncales (incluidos los dos enlaces hacia Grecia) a 100 Gbps y enlaces perifericos a 10 Gbps sobre la topologia SNDlib.",
+                     ("UK", "GR"),
+                     overrides=[(u, v, 100) for u, v in UPGRADED_100G] + [(u, v, 10) for u, v in LEGACY_10G]),
+            scenario("small-tsp", "Ruta corta (TSP exacto)",
+                     "Mantenimiento de 10 centrales de Europa central: Held-Karp exacto.",
+                     ("DE", "HU"), tsp_nodes=["AT", "DE", "CH", "IT", "SI", "HR", "HU", "SK", "CZ", "PL"]),
+            scenario("blackout-gr-it", "Blackout GR-IT (simulado)",
+                     "Falla el enlace Atenas-Milan (en el MST y en el corte minimo): recalculo de MST, flujo y corte.",
+                     ("UK", "GR"), removed=[("GR", "IT")]),
         ],
     }
     with open(OUT / "scenarios.json", "w", encoding="utf-8") as handle:
         json.dump(scenarios, handle, indent=2, ensure_ascii=False)
         handle.write("\n")
 
-    t1, t2 = make_transmissions(rng)
+    t1, t2 = make_transmissions(random.Random(f"{SEED}-transmissions"))
     (OUT / "transmission1.txt").write_text(wrap(t1), encoding="utf-8")
     (OUT / "transmission2.txt").write_text(wrap(t2), encoding="utf-8")
     for name, signature in SIGNATURES.items():
         (OUT / name).write_text(signature + "\n", encoding="utf-8")
-    write_csv("mapping.csv", ["transmission", "link_u", "link_v", "scenario", "label"], [
-        ("transmission1.txt", "AT", "CH", "Austria - Suiza", "benign"),
-        ("transmission2.txt", "AT", "DE", "Austria - Alemania", "ddos"),
+    # Mismo formato que el boton "Descargar mapping.csv" del sitio del reto.
+    write_csv("mapping.csv", ["transmission", "link", "scenario", "status"], [
+        ("transmission1.txt", "Austria – Suiza", "Tráfico benigno", "pending"),
+        ("transmission2.txt", "Austria – Alemania", "Tráfico DDoS", "pending"),
     ])
-    print(f"Datos sinteticos escritos en {OUT}")
+    print(f"{len(sndlib_nodes)} nodos, {len(sndlib_links)} enlaces y {len(sndlib_demands)} demandas de SNDlib "
+          f"escritos en {OUT}")
 
 
 if __name__ == "__main__":

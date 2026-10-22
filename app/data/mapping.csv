@@ -1,3 +1,3 @@
-transmission,link_u,link_v,scenario,label
-transmission1.txt,AT,CH,Austria - Suiza,benign
-transmission2.txt,AT,DE,Austria - Alemania,ddos
+transmission,link,scenario,status
+transmission1.txt,Austria – Suiza,Tráfico benigno,pending
+transmission2.txt,Austria – Alemania,Tráfico DDoS,pending
