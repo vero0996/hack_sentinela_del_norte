@@ -26,7 +26,6 @@ tests/        pruebas unitarias C++, grader_check.py, samples/ del modo archivos
 bench/        benchmark.py
 results/      benchmarks.md, benchmarks.csv, environment.md
 reflection.md fuente de ReflexSENTINEL_….pdf
-defense.md    guía de estudio para la defensa técnica
 ```
 
 ## Arquitectura
@@ -50,6 +49,28 @@ agrega `edge_flow` y `min_cut`, y `tsp` agrega `exact`.
 - `src/matching.h`: búsqueda de patrones.
 - `src/palindrome.h`: subcadena palíndroma más larga.
 - `src/common_substring.h`: subcadena común más larga.
+
+## Resumen de complejidad
+
+n = nodos, sitios o longitud del texto; V/E = nodos/aristas; m = longitud de la
+firma o de la segunda transmisión; σ = alfabeto (16 en hexadecimal). La
+pendiente es el exponente medido en `results/benchmarks.md` (tiempo ~ n^pendiente).
+
+| Problema | Técnica elegida | Tiempo | Memoria | Pendiente | Alternativa | Tiempo | Pendiente |
+|---|---|---|---|---:|---|---|---:|
+| MST | Kruskal + DSU | O(E log E) | O(V + E) | 1.09 | Prim (heap) | O(E log V) | 1.10 |
+| TSP (n ≤ 15) | Held–Karp | O(n²·2ⁿ) | O(n·2ⁿ) | ×5 cada 2 nodos | — | — | — |
+| TSP (n > 15) | Vecino cercano + 2-opt | O(n²) por pasada | O(n) | 2.01 | — | — | — |
+| Flujo máximo | Dinic | O(V²·E) | O(V + E) | 0.98 | Edmonds–Karp | O(V·E²) | 1.06 |
+| Voronoi | Semiplanos + poda | O(n² log n) | O(n) por celda | 2.03 | Sin poda | O(n²·k) | 2.01 |
+| Central más cercana | Búsqueda lineal | O(n) por consulta | O(1) | — | — | — | — |
+| Firmas | KMP | O(n + m) | O(m) | 1.00 | Algoritmo Z | O(n + m) | 0.99 |
+| Palíndromo | Manacher | O(n) | O(n) | 0.94 | Expansión desde el centro | O(n²) | 1.98 |
+| Subcadena común | Autómata de sufijos | O((n + m)·σ) | O(m·σ) | 1.11 | DP de dos filas | O(n·m) | 2.04 |
+
+Las pendientes de MST, flujo y palíndromo quedan por debajo de la cota de peor caso
+porque las instancias aleatorias no la alcanzan; la del palíndromo es la del peor
+caso de la expansión (`AAAA…`). Detalle por algoritmo en las secciones siguientes.
 
 ## Compilación y ejecución
 
@@ -146,8 +167,10 @@ linter de estilo aplicado a `main.cpp`.
 - **Elegido: Dinic** (`maxFlow`). BFS construye el grafo de niveles y un DFS
   con punteros de arista envía flujo bloqueante. O(V²·E) tiempo, O(V + E) memoria.
 - **Alternativa: Edmonds-Karp** (`edmondsKarp`), camino aumentante más corto
-  por BFS. O(V·E²). Dinic gana porque cada fase satura todos los caminos de la
-  misma longitud; ambos coinciden en 200 redes aleatorias.
+  por BFS. O(V·E²). Ambos coinciden en 200 redes aleatorias. Se eligió Dinic por
+  su mejor cota garantizada (cada fase satura todos los caminos más cortos), no
+  por el caso promedio: en los benchmarks Edmonds-Karp gana con n = 800 y Dinic
+  solo se separa con n = 1 600.
 - Correctitud: teorema de flujo máximo / corte mínimo. El resultado incluye el
   flujo por arista (`edgeFlow`, para dibujarlo sobre la topología) y el lado
   de cada nodo en el corte mínimo (`minCutSide`). Las pruebas verifican
@@ -253,12 +276,10 @@ la complejidad teórica y casos límite. Equipo, compilador, opciones y
 procedimiento quedan en `results/environment.md`. El análisis está en
 `reflection.md`.
 
-## Validación pendiente
+## Limitaciones
 
-- Sustituir los CSV por el paquete oficial del reto (costos, capacidades,
-  escenarios y transmisiones) cuando esté disponible.
-- Completar `team.txt`, las matrículas de `src/main.cpp` y la sección de
-  contribuciones de `reflection.md`; exportar `reflection.md` a PDF.
+- Los datos de la red provienen de SNDlib más simulación, no del paquete oficial
+  del reto; para usarlo basta con sustituir los CSV de `app/data/`.
 
 ## Trazabilidad de datos
 
