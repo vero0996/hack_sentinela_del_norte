@@ -1,0 +1,129 @@
+{
+  "note": "Escenarios sinteticos de simulacion. No provienen de SNDlib.",
+  "scenarios": [
+    {
+      "id": "baseline",
+      "name": "Linea base",
+      "description": "Red completa con capacidades de 10, 40 y 100 Gbps.",
+      "flow": {
+        "source": "UK",
+        "sink": "GR"
+      },
+      "tsp": {
+        "start": "AT",
+        "nodes": "all"
+      },
+      "voronoi": {
+        "domain": {
+          "lon_min": -25,
+          "lat_min": 30,
+          "lon_max": 45,
+          "lat_max": 72
+        }
+      },
+      "capacity_overrides": [],
+      "removed_links": []
+    },
+    {
+      "id": "small-tsp",
+      "name": "Ruta corta (TSP exacto)",
+      "description": "Mantenimiento de 10 centrales de Europa central: Held-Karp exacto.",
+      "flow": {
+        "source": "DE",
+        "sink": "HU"
+      },
+      "tsp": {
+        "start": "AT",
+        "nodes": [
+          "AT",
+          "DE",
+          "CH",
+          "IT",
+          "SI",
+          "HR",
+          "HU",
+          "SK",
+          "CZ",
+          "PL"
+        ]
+      },
+      "voronoi": {
+        "domain": {
+          "lon_min": -25,
+          "lat_min": 30,
+          "lon_max": 45,
+          "lat_max": 72
+        }
+      },
+      "capacity_overrides": [],
+      "removed_links": []
+    },
+    {
+      "id": "capacity-upgrade",
+      "name": "Mejora de capacidad",
+      "description": "Los enlaces hacia Grecia pasan a 100 Gbps.",
+      "flow": {
+        "source": "UK",
+        "sink": "GR"
+      },
+      "tsp": {
+        "start": "AT",
+        "nodes": "all"
+      },
+      "voronoi": {
+        "domain": {
+          "lon_min": -25,
+          "lat_min": 30,
+          "lon_max": 45,
+          "lat_max": 72
+        }
+      },
+      "capacity_overrides": [
+        {
+          "u": "IT",
+          "v": "GR",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "BG",
+          "v": "GR",
+          "capacity_gbps": 100
+        },
+        {
+          "u": "GR",
+          "v": "IL",
+          "capacity_gbps": 100
+        }
+      ],
+      "removed_links": []
+    },
+    {
+      "id": "blackout-bg-gr",
+      "name": "Blackout BG-GR",
+      "description": "Falla el enlace Sofia-Atenas (en el MST y en el corte minimo): recalculo de MST, flujo y corte.",
+      "flow": {
+        "source": "UK",
+        "sink": "GR"
+      },
+      "tsp": {
+        "start": "AT",
+        "nodes": "all"
+      },
+      "voronoi": {
+        "domain": {
+          "lon_min": -25,
+          "lat_min": 30,
+          "lon_max": 45,
+          "lat_max": 72
+        }
+      },
+      "capacity_overrides": [],
+      "removed_links": [
+        {
+          "u": "BG",
+          "v": "GR"
+        }
+      ]
+    }
+  ]
+}

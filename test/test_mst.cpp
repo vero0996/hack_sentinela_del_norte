@@ -1,5 +1,6 @@
 ﻿#include <cassert>
 #include <iostream>
+#include <random>
 #include "../src/mst.h"
 
 int main() {
@@ -57,6 +58,31 @@ int main() {
     assert(result4.edges.empty());
 
     std::cout << "Caso 4: un solo nodo OK\n";
+
+    // Caso 5: Prim coincide con Kruskal en grafos aleatorios (conexos y no conexos)
+    std::mt19937 rng(2038);
+
+    for (int round = 0; round < 200; ++round) {
+        const int n = 1 + static_cast<int>(rng() % 40);
+        std::vector<sentinel::MSTEdge> randomEdges;
+
+        for (int u = 0; u < n; ++u) {
+            for (int v = u + 1; v < n; ++v) {
+                if (rng() % 100 < 15) {
+                    randomEdges.push_back({u, v, static_cast<long long>(rng() % 100) - 20});
+                }
+            }
+        }
+
+        auto kruskal = sentinel::kruskalMST(n, randomEdges);
+        auto prim = sentinel::primMST(n, randomEdges);
+
+        assert(kruskal.total_cost == prim.total_cost);
+        assert(kruskal.edges.size() == prim.edges.size());
+        assert(kruskal.connected == prim.connected);
+    }
+
+    std::cout << "Caso 5: Prim coincide con Kruskal en 200 grafos aleatorios OK\n";
     std::cout << "Todas las pruebas de MST pasaron.\n";
 
     return 0;

@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SENTINEL Digital Twin</title>
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">◆</span>
+      <div>
+        <h1>SENTINEL Digital Twin</h1>
+        <p>Sentinela del Norte · TC2038 · núcleo C++</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="explorer" role="tab">Network Explorer</button>
+      <button class="tab" data-tab="lab" role="tab">Algorithm Laboratory</button>
+      <button class="tab" data-tab="cyber" role="tab">Cybersecurity Console</button>
+      <button class="tab" data-tab="scenarios" role="tab">Scenario Manager</button>
+    </nav>
+    <div class="scenario-pill">
+      <label for="scenario-select">Escenario</label>
+      <select id="scenario-select"></select>
+    </div>
+  </header>
+
+  <div id="banner" class="banner"></div>
+
+  <main>
+    <!-- Network Explorer -->
+    <section id="tab-explorer" class="panel active">
+      <div class="explorer">
+        <div id="map"></div>
+        <aside class="sidebar">
+          <div class="card">
+            <h2>Capas calculadas en C++</h2>
+            <div class="button-grid">
+              <button data-overlay="mst">Árbol de expansión mínima</button>
+              <button data-overlay="tsp">Ruta de mantenimiento (TSP)</button>
+              <button data-overlay="flow">Flujo máximo</button>
+              <button data-overlay="voronoi">Regiones Voronoi</button>
+            </div>
+            <div class="row">
+              <label>Origen <select id="flow-source"></select></label>
+              <label>Destino <select id="flow-sink"></select></label>
+            </div>
+            <button class="ghost" id="clear-overlays">Limpiar capas</button>
+          </div>
+          <div class="card" id="explorer-result">
+            <h2>Resultado</h2>
+            <p class="muted">Elige una capa. Haz clic en el mapa para consultar la central más cercana (Voronoi en C++).</p>
+          </div>
+          <div class="card">
+            <h2>Leyenda</h2>
+            <ul class="legend">
+              <li><span class="swatch cap100"></span>100 Gbps</li>
+              <li><span class="swatch cap40"></span>40 Gbps</li>
+              <li><span class="swatch cap10"></span>10 Gbps</li>
+              <li><span class="swatch cut"></span>Corte mínimo / enlace caído</li>
+            </ul>
+            <p class="muted small" id="synthetic-note"></p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- Algorithm Laboratory -->
+    <section id="tab-lab" class="panel">
+      <div class="lab">
+        <div class="card">
+          <h2>Configuración</h2>
+          <div class="form-grid">
+            <label>Problema
+              <select id="lab-mode">
+                <option value="mst">MST</option>
+                <option value="tsp">TSP</option>
+                <option value="flow">Flujo máximo</option>
+                <option value="voronoi">Voronoi</option>
+                <option value="matching">Firmas</option>
+                <option value="palindrome">Palíndromo</option>
+                <option value="common">Subcadena común</option>
+              </select>
+            </label>
+            <label>Técnica A <select id="lab-algo-a"></select></label>
+            <label>Técnica B <select id="lab-algo-b"></select></label>
+            <label>Instancia
+              <select id="lab-source">
+                <option value="scenario">Escenario actual</option>
+                <option value="random">Aleatoria</option>
+              </select>
+            </label>
+            <label>Tamaño n <input id="lab-size" type="number" min="2" value="200"></label>
+            <label>Semilla <input id="lab-seed" type="number" value="2038"></label>
+          </div>
+          <div class="row">
+            <button id="lab-run">Ejecutar A vs B</button>
+            <button class="ghost" id="lab-scale">Curva de escalabilidad</button>
+          </div>
+          <p class="muted small" id="lab-hint"></p>
+        </div>
+        <div class="lab-results">
+          <div class="card" id="lab-a"><h2>Técnica A</h2><p class="muted">Sin ejecutar.</p></div>
+          <div class="card" id="lab-b"><h2>Técnica B</h2><p class="muted">Sin ejecutar.</p></div>
+          <div class="card wide" id="lab-compare"><h2>Comparación</h2><p class="muted">Ejecuta ambas técnicas sobre la misma instancia.</p></div>
+          <div class="card wide" id="lab-chart"><h2>Escalabilidad</h2><p class="muted">Tiempo del algoritmo (ms, medido en C++) contra el tamaño de la entrada.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cybersecurity Console -->
+    <section id="tab-cyber" class="panel">
+      <div class="cyber">
+        <div class="card">
+          <h2>Firmas de referencia</h2>
+          <div class="form-grid three">
+            <label>mcode1 <input id="sig-1" class="mono"></label>
+            <label>mcode2 <input id="sig-2" class="mono"></label>
+            <label>mcode3 <input id="sig-3" class="mono"></label>
+          </div>
+          <div class="row">
+            <button id="cyber-run">Analizar transmisiones</button>
+            <button class="ghost" id="cyber-reset">Restaurar firmas</button>
+          </div>
+          <p class="muted small">Hexadecimal en mayúsculas, saltos de línea ignorados, posiciones en base 1.
+            Detectar una firma no confirma una infección real.</p>
+        </div>
+        <div class="cyber-grid">
+          <div class="card" id="cyber-output"><h2>Salida (formato de la especificación)</h2><pre class="mono">—</pre></div>
+          <div class="card" id="cyber-mapping"><h2>Correspondencia de simulación</h2></div>
+        </div>
+        <div class="card" id="cyber-t1"><h2>transmission1.txt</h2><div class="hex mono"></div></div>
+        <div class="card" id="cyber-t2"><h2>transmission2.txt</h2><div class="hex mono"></div></div>
+        <ul class="legend inline">
+          <li><span class="swatch hl-match"></span>Firma</li>
+          <li><span class="swatch hl-pal"></span>Palíndromo más largo</li>
+          <li><span class="swatch hl-common"></span>Subcadena común más larga</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Scenario Manager -->
+    <section id="tab-scenarios" class="panel">
+      <div class="scenarios">
+        <div class="card">
+          <h2>Escenarios</h2>
+          <div id="scenario-list"></div>
+          <div class="row">
+            <label class="file">Cargar escenario JSON <input type="file" id="scenario-file" accept=".json,application/json"></label>
+            <button class="ghost" id="scenario-template">Descargar plantilla</button>
+          </div>
+        </div>
+        <div class="card">
+          <h2>Enlaces (simula una falla)</h2>
+          <p class="muted small">Desactiva enlaces para simular el Blackout Scenario; las capas se recalculan en C++.</p>
+          <div id="link-list" class="link-list"></div>
+        </div>
+        <div class="card wide">
+          <h2>Comparar escenarios</h2>
+          <button id="scenario-compare">Calcular indicadores de todos los escenarios</button>
+          <div id="scenario-table"></div>
+        </div>
+        <div class="card wide">
+          <h2>Registro de ejecuciones del núcleo C++</h2>
+          <div id="call-log" class="call-log mono"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+id,name,city,country,lat,lon
+AT,Austria,Vienna,AT,48.2082,16.3738
+BE,Belgium,Brussels,BE,50.8503,4.3517
+BG,Bulgaria,Sofia,BG,42.6977,23.3219
+CH,Switzerland,Geneva,CH,46.2044,6.1432
+CZ,Czechia,Prague,CZ,50.0755,14.4378
+DE,Germany,Frankfurt,DE,50.1109,8.6821
+DK,Denmark,Copenhagen,DK,55.6761,12.5683
+EE,Estonia,Tallinn,EE,59.437,24.7536
+ES,Spain,Madrid,ES,40.4168,-3.7038
+FI,Finland,Helsinki,FI,60.1699,24.9384
+FR,France,Paris,FR,48.8566,2.3522
+GR,Greece,Athens,GR,37.9838,23.7275
+HR,Croatia,Zagreb,HR,45.815,15.9819
+HU,Hungary,Budapest,HU,47.4979,19.0402
+IE,Ireland,Dublin,IE,53.3498,-6.2603
+IL,Israel,Tel Aviv,IL,32.0853,34.7818
+IT,Italy,Milan,IT,45.4642,9.19
+LT,Lithuania,Vilnius,LT,54.6872,25.2797
+LU,Luxembourg,Luxembourg,LU,49.6116,6.1319
+LV,Latvia,Riga,LV,56.9496,24.1052
+NL,Netherlands,Amsterdam,NL,52.3676,4.9041
+NO,Norway,Oslo,NO,59.9139,10.7522
+PL,Poland,Poznan,PL,52.4064,16.9252
+PT,Portugal,Lisbon,PT,38.7223,-9.1393
+RO,Romania,Bucharest,RO,44.4268,26.1025
+RS,Serbia,Belgrade,RS,44.7866,20.4489
+SE,Sweden,Stockholm,SE,59.3293,18.0686
+SI,Slovenia,Ljubljana,SI,46.0569,14.5058
+SK,Slovakia,Bratislava,SK,48.1486,17.1077
+UK,United Kingdom,London,GB,51.5074,-0.1278
