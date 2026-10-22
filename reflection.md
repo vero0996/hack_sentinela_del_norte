@@ -1,7 +1,7 @@
 # Reflexión técnica — SENTINELA DEL NORTE
 
 TC2038 Análisis y Diseño de Algoritmos Avanzados · Hackathon integrador
-Equipo: ver `team.txt` · Fuente del documento `ReflexSENTINEL_A0XXXXXXX.pdf`
+Equipo: ver `team.txt` · Fuente del documento `ReflexSENTINEL_A01255674.pdf`
 
 > Todas las cifras de este documento provienen de `results/benchmarks.md` (generado con
 > `make bench`), de `tests/grader_check.py` y del Digital Twin (`make app`). Equipo de
@@ -290,10 +290,10 @@ cubre en todos los escenarios.
 
 | Integrante | Matrícula | Contribución principal |
 |---|---|---|
-| _Nombre 1_ | A0XXXXXXX | Network Optimization (MST, TSP) |
-| _Nombre 2_ | A0XXXXXXX | Flow & Computational Geometry (flujo, Voronoi) |
-| _Nombre 3_ | A0XXXXXXX | Cybersecurity Algorithms (firmas, palíndromos, subcadena común) |
-| _Nombre 4_ | A0XXXXXXX | System Integration & Validation (app, pruebas, benchmarks) |
+| Verónica Paola Zapata Sánchez | A01199193 | Network Optimization (MST, TSP) |
+| Luis Álvaro Rosales Sálazar | A01255674 | Flow & Computational Geometry (flujo, Voronoi) |
+| Fernando Hernandez Cantú | A00841856 | Cybersecurity Algorithms (firmas, palíndromos, subcadena común) |
+| Alfonso José Morales Mallozzi | A00841550 | System Integration & Validation (app, pruebas, benchmarks) |
 
 ### Reflexiones individuales
 

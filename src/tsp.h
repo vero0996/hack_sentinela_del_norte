@@ -123,7 +123,7 @@ inline void improveTwoOpt(const std::vector<std::vector<long long>>& graph, std:
 	}
 }
 
-}  // namespace detail
+} 
 
 // TSP exacto con Held-Karp (programacion dinamica sobre subconjuntos).
 // Tiempo O(n^2 * 2^n), memoria O(n * 2^n). Admite como maximo TSP_EXACT_MAX nodos.
