@@ -1,31 +1,23 @@
-id,name,city,country,lat,lon
-AT,Austria,Vienna,AT,48.2082,16.3738
-BE,Belgium,Brussels,BE,50.8503,4.3517
-BG,Bulgaria,Sofia,BG,42.6977,23.3219
-CH,Switzerland,Geneva,CH,46.2044,6.1432
-CZ,Czechia,Prague,CZ,50.0755,14.4378
-DE,Germany,Frankfurt,DE,50.1109,8.6821
-DK,Denmark,Copenhagen,DK,55.6761,12.5683
-EE,Estonia,Tallinn,EE,59.437,24.7536
-ES,Spain,Madrid,ES,40.4168,-3.7038
-FI,Finland,Helsinki,FI,60.1699,24.9384
-FR,France,Paris,FR,48.8566,2.3522
-GR,Greece,Athens,GR,37.9838,23.7275
-HR,Croatia,Zagreb,HR,45.815,15.9819
-HU,Hungary,Budapest,HU,47.4979,19.0402
-IE,Ireland,Dublin,IE,53.3498,-6.2603
-IL,Israel,Tel Aviv,IL,32.0853,34.7818
-IT,Italy,Milan,IT,45.4642,9.19
-LT,Lithuania,Vilnius,LT,54.6872,25.2797
-LU,Luxembourg,Luxembourg,LU,49.6116,6.1319
-LV,Latvia,Riga,LV,56.9496,24.1052
-NL,Netherlands,Amsterdam,NL,52.3676,4.9041
-NO,Norway,Oslo,NO,59.9139,10.7522
-PL,Poland,Poznan,PL,52.4064,16.9252
-PT,Portugal,Lisbon,PT,38.7223,-9.1393
-RO,Romania,Bucharest,RO,44.4268,26.1025
-RS,Serbia,Belgrade,RS,44.7866,20.4489
-SE,Sweden,Stockholm,SE,59.3293,18.0686
-SI,Slovenia,Ljubljana,SI,46.0569,14.5058
-SK,Slovakia,Bratislava,SK,48.1486,17.1077
-UK,United Kingdom,London,GB,51.5074,-0.1278
+id,sndlib_id,name,name_es,city,lat,lon
+AT,at1.at,Austria,Austria,Vienna,48.2091,16.3729
+BE,be1.be,Belgium,Belgica,Brussels,50.8469,4.3518
+CH,ch1.ch,Switzerland,Suiza,Geneva,46.2038,6.1399
+CZ,cz1.cz,Czechia,Chequia,Prague,50.0785,14.4423
+DE,de1.de,Germany,Alemania,Frankfurt,50.1122,8.6842
+ES,es1.es,Spain,Espana,Madrid,40.4167,-3.7033
+FR,fr1.fr,France,Francia,Paris,48.8566,2.351
+GR,gr1.gr,Greece,Grecia,Athens,37.9778,23.5808
+HR,hr1.hr,Croatia,Croacia,Zagreb,45.8071,15.9644
+HU,hu1.hu,Hungary,Hungria,Budapest,47.4976,19.0936
+IE,ie1.ie,Ireland,Irlanda,Dublin,53.3416,-6.2573
+IL,il1.il,Israel,Israel,Tel Aviv,32.0714,34.8097
+IT,it1.it,Italy,Italia,Milan,45.4642,9.19
+LU,lu1.lu,Luxembourg,Luxemburgo,Luxembourg,49.6112,6.1296
+NL,nl1.nl,Netherlands,Paises Bajos,Amsterdam,52.3236,4.9407
+NY,ny1.ny,United States,Estados Unidos,New York,40.6698,-73.94384
+PL,pl1.pl,Poland,Polonia,Poznan,52.3963,16.8874
+PT,pt1.pt,Portugal,Portugal,Lisbon,38.7073,-9.1363
+SE,se1.se,Sweden,Suecia,Stockholm,59.3617,17.8742
+SI,si1.si,Slovenia,Eslovenia,Ljubljana,46.0574,14.5148
+SK,sk1.sk,Slovakia,Eslovaquia,Bratislava,48.1531,17.1297
+UK,uk1.uk,United Kingdom,Reino Unido,London,51.5086,-0.1264
