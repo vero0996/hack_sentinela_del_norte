@@ -277,7 +277,7 @@ desplaza a HU–RO, RS–BG, IT–GR e IT–IL.
 
 | Integrante | Matrícula | Contribución principal |
 |---|---|---|
-| _Nombre 1_ | A0XXXXXXX | Network Optimization (MST, TSP) |
+| Verónica Paola Zapata Sánchez | A01199193 | Network Optimization (MST, TSP) |
 | _Nombre 2_ | A0XXXXXXX | Flow & Computational Geometry (flujo, Voronoi) |
 | _Nombre 3_ | A0XXXXXXX | Cybersecurity Algorithms (firmas, palíndromos, subcadena común) |
 | _Nombre 4_ | A0XXXXXXX | System Integration & Validation (app, pruebas, benchmarks) |
@@ -286,6 +286,31 @@ desplaza a HU–RO, RS–BG, IT–GR e IT–IL.
 
 _(Cada integrante agrega aquí un párrafo: qué aprendió, qué decisión defendería y qué
 cambiaría.)_
+
+**Verónica Paola Zapata Sánchez (A01199193) — MST y TSP.**
+Aprendí que elegir un algoritmo no depende solo de su complejidad
+teórica, sino de la forma de los datos y de las restricciones del
+entorno. En el MST, Kruskal con DSU resultó ~2.3× más rápido que Prim
+(12.6 ms vs 29.7 ms con 32 000 nodos) porque nuestras entradas son
+listas de aristas dispersas (E ≈ 7V); Prim habría ganado en grafos
+densos. En el TSP aprendí que el límite del enfoque exacto lo marca la
+memoria antes que el tiempo: Held-Karp usa O(n·2ⁿ) y con 20 nodos
+superaba los 250 MB del compilador web.
+
+Defendería dos decisiones. Primera, Kruskal por la propiedad de corte y
+por su rendimiento medido, con Prim como alternativa y oráculo en
+pruebas: 200 grafos aleatorios donde ambos dan el mismo costo. Segunda,
+el criterio híbrido del TSP: Held-Karp hasta 15 nodos para garantizar el
+óptimo y vecino más cercano + 2-opt por encima, informando en la salida
+si el resultado es exacto o aproximado, para no presentar una
+aproximación como óptimo.
+
+Cambiaría la heurística del TSP: 2-opt no garantiza el óptimo y solo
+aplica a matrices simétricas, así que probaría Or-opt o Lin-Kernighan, o
+Christofides (garantía de 1.5×) al ser una métrica de caminos mínimos
+que cumple la desigualdad triangular. También leería el JSON en
+streaming, porque el árbol de entrada domina la memoria (166 MB con
+224 000 aristas) y no el algoritmo en sí.
 
 ---
 
