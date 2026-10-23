@@ -297,13 +297,13 @@ cubre en todos los escenarios.
 
 ### Reflexiones individuales
 
-**Luis Álvaro Rosales Sálazar (A01255674) — Flow & Computational Geometry.** Lo que más
-aprendí del flujo máximo es que el resultado trae su propia prueba: al terminar Dinic, los nodos
-alcanzables desde la fuente en el grafo residual forman un corte cuyas aristas están saturadas, y
-las pruebas de tests/test_max_flow.cpp verifican que la capacidad de ese corte es igual al flujo,
-además de capacidad, conservación y coincidencia con Edmonds–Karp en 200 redes aleatorias. Ese
-corte es lo que hace útil el resultado en la red: Londres → Atenas da 80 Gbps porque Grecia solo
-tiene DE–GR y GR–IT, y en el escenario *Blackout* GR–IT baja a 40 Gbps. 
+**Luis Álvaro Rosales Sálazar (A01255674) — Flow & Computational Geometry.** Aprendi algo que parecia un poco obvio pero no me parecia tan claro: el flujo máximo siempre es igual al corte mínimo, y eso sirve para
+saber si tu código está bien. Si al final la suma de las aristas saturadas del corte no da lo mismo
+que el flujo, hay un error. Eso es lo que revisan las pruebas de tests/test_max_flow.cpp, además
+de comparar contra Edmonds–Karp en 200 redes aleatorias. También me di cuenta de que el número
+solo no dice mucho; lo útil es ver qué aristas forman el corte. Por ejemplo, de Londres a Atenas
+solo salen 80 Gbps porque a Grecia nada más llegan dos enlaces (DE–GR y GR–IT), y en el escenario
+*Blackout* GR–IT baja a 40 Gbps.
 
 La decisión que defiendo es haber elegido Dinic aunque nuestros propios benchmarks no lo favorecen en todo: 
 Edmonds–Karp ganó con n = 800 (0.73 vs 1.04 ms) y Dinic solo se separó con n = 1 600 (2.0 vs 5.0 ms); lo elegimos
