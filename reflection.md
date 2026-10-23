@@ -340,6 +340,36 @@ que cumple la desigualdad triangular. También leería el JSON en
 streaming, porque el árbol de entrada domina la memoria (166 MB con
 224 000 aristas) y no el algoritmo en sí.
 
+**Alfonso Josè Morales Mallozzi (A00841550) - Validaciòn / Casos de uso**
+El proyecto me demostro el uso practico de algoritmos dentro de redes de
+gran tamaño para la correcta distribuciòn de responsabilidades
+computacionales entre distintos nodos/ servidores. Desde detectar patrones
+Fuera de lo comun hasta optimizar el proceso de comunicaciòn en redes
+complejas.
+
+Lo que más defiendo de mi parte es la forma en que validamos los resultados.
+Al principio pensé que bastaba con comparar nuestra salida contra una 
+respuesta esperada, pero en problemas como el MST eso no sirve. Cuando hay pesos
+empatados puede haber más de un árbol correcto, y una comparación directa 
+marcaría como error una respuesta que está bien. Por eso el validador no
+compara aristas. Revisa que sean n−1 aristas que existen, que no haya ciclos, que
+todo quede conectado y que el costo sea el mínimo. La misma idea la apliqué
+en flujo, revisando que se conserve en cada nodo y que el corte mínimo valga lo
+mismo que el flujo máximo, y también comparando cada técnica contra su alternativa,
+como Kruskal contra Prim o Dinic contra Edmonds-Karp. Así pasamos 400 de 400ç
+casos funcionales y las 73 mediciones de los benchmarks coincidieron entre técnicas.
+Para mí eso demuestra que un algoritmo no está bien solo porque da un número pero 
+porque se puede comprobar que ese número cumple lo que el problema pide.
+
+Si lo volviera a hacer, cambiaría dos cosas de mi parte. La primera es el parser
+JSON. Ahora guarda todo el árbol en memoria antes de procesarlo, y con
+entradas grandes eso pesa mucho: con 224,000 aristas llegó a 166 MB. Un parser
+que fuera leyendo los datos conforme llegan gastaría mucho menos. La
+segunda es que el script de benchmarks usa os.wait4 para medir la memoria.
+y eso solo existe en Mac y Linux, así que en Windows no corre. Usaría una forma
+de medir que funcione en cualquier sistema, para que todo el equipo pueda repetir
+los experimentos desde su propia computadora.
+
 **Fernando Hernandez Cantu (A00841856) — Cybersecurity Algorithms.**
 En esta evidencia principalmente aprendi y reforce los algoritmos de busqueda de patrones en cadenas de texto. vi como busquedas tipo patrones en un texto, palindromos y subcadenas comunes pueden ser resueltos de manera eficiente con algoritmos como KMP, Manacher y autómatas de sufijos. Aprendí que la elección del algoritmo depende del tamaño de la entrada y de las restricciones de memoria, ya que algunos algoritmos son más rápidos pero consumen más memoria, mientras que otros son más lentos pero más eficientes en términos de espacio.
 
