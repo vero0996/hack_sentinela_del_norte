@@ -297,13 +297,7 @@ cubre en todos los escenarios.
 
 ### Reflexiones individuales
 
-**Luis Álvaro Rosales Sálazar (A01255674) — Flow & Computational Geometry.** Aprendi algo que parecia un poco obvio: el flujo máximo siempre es igual al corte mínimo, y eso sirve para
-saber si tu código está bien. Si al final la suma de las aristas saturadas del corte no da lo mismo
-que el flujo, hay un error. Eso es lo que revisan las pruebas de tests/test_max_flow.cpp, además
-de comparar contra Edmonds–Karp en 200 redes aleatorias. También me di cuenta de que el número
-solo no dice mucho; lo útil es ver qué aristas forman el corte. Por ejemplo, de Londres a Atenas
-solo salen 80 Gbps porque a Grecia nada más llegan dos enlaces (DE–GR y GR–IT), y en el escenario
-*Blackout* GR–IT baja a 40 Gbps.
+**Luis Álvaro Rosales Sálazar (A01255674) — Flow & Computational Geometry.** En esta evidencia una cosa que yo aprendi fueron por ejemplo el algoritmo de Dinics. No sabia como se implementaba pero fue muy interesante saber como funciona y como logra calcular el flujo maximo. La verdad aunque lo de calcular el maximo flujo sea algop que no se hace con tanta frecuencia comparado a otros algoritmos (por lo menos yo no lo he visto mucho en leetcode) igual es muy valioso en la vida real para calcular por ejemplo cuanto internet puede llegar a un lugar.
 
 La decisión que defiendo es haber elegido Dinic aunque nuestros propios benchmarks no lo favorecen en todo: 
 Edmonds–Karp ganó con n = 800 (0.73 vs 1.04 ms) y Dinic solo se separó con n = 1 600 (2.0 vs 5.0 ms); lo elegimos
