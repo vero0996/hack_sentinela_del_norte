@@ -297,7 +297,7 @@ cubre en todos los escenarios.
 
 ### Reflexiones individuales
 
-**Luis Álvaro Rosales Sálazar (A01255674) — Flow & Computational Geometry.** Aprendi algo que parecia un poco obvio pero no me parecia tan claro: el flujo máximo siempre es igual al corte mínimo, y eso sirve para
+**Luis Álvaro Rosales Sálazar (A01255674) — Flow & Computational Geometry.** Aprendi algo que parecia un poco obvio: el flujo máximo siempre es igual al corte mínimo, y eso sirve para
 saber si tu código está bien. Si al final la suma de las aristas saturadas del corte no da lo mismo
 que el flujo, hay un error. Eso es lo que revisan las pruebas de tests/test_max_flow.cpp, además
 de comparar contra Edmonds–Karp en 200 redes aleatorias. También me di cuenta de que el número

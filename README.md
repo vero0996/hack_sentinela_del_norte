@@ -3,19 +3,151 @@
 Hackathon integrador — TC2038
 Lenguaje del núcleo algorítmico: C++17
 
-## Inicio rápido
+## Cómo ejecutar
 
-Requisitos: un compilador C++17 (g++ o clang++), Python 3.8+ y `make`. Sin
-dependencias externas ni `pip install`.
+Todos los comandos se ejecutan desde la **raíz del repositorio**.
+
+### 1. Requisitos
+
+| Herramienta | Versión | Para qué | Comprobar |
+|---|---|---|---|
+| Compilador C++17 (g++ o clang++) | g++ ≥ 7 / clang ≥ 5 | compilar `sentinel` y las pruebas | `c++ --version` |
+| Python | ≥ 3.8 | app, verificador del autograder, benchmarks | `python3 --version` |
+| `make` | cualquiera | atajos (opcional) | `make --version` |
+| `zip` | cualquiera | generar los ZIP de entrega | `zip -v` |
+
+No hay dependencias externas: nada de `pip install` ni `npm install`, y la app
+funciona sin internet.
+
+- **macOS:** `xcode-select --install` instala clang y `make`.
+- **Linux (Debian/Ubuntu):** `sudo apt install build-essential python3 zip`.
+- **Windows:** ver [Windows (sin make)](#7-windows-sin-make).
+
+### 2. Resumen de comandos
 
 ```bash
-make            # compila ./sentinel (núcleo C++)
-make test       # 7 suites unitarias + verificador del autograder + modo archivos
-make app        # SENTINEL Digital Twin en http://127.0.0.1:8000
-make bench      # benchmarks reproducibles -> results/
-make grader-zip       # dist/sentinela_grader.zip (solo src, README, team.txt, test sin .cpp)
+make                  # compila ./sentinel (núcleo C++)
+make test             # 7 suites unitarias + verificador del autograder + modo archivos
+make app              # SENTINEL Digital Twin en http://127.0.0.1:8000
+make bench            # benchmarks reproducibles -> results/
+make grader-zip       # dist/sentinela_grader.zip (solo src, README, team.txt, tests sin .cpp)
 make deliverable-zip  # dist/sentinela_entrega.zip (paquete completo para Canvas)
+make data             # regenera los datos sintéticos de app/data/ (semilla fija)
+make clean            # borra sentinel, build/ y dist/
 ```
+
+### 3. Compilar y usar el núcleo C++
+
+```bash
+make
+# equivalente sin make:
+c++ -std=c++17 -O2 -Wall -Wextra -Wpedantic src/main.cpp -o sentinel
+```
+
+**Modo JSON** (el que usa el autograder): un objeto JSON por stdin, un objeto
+JSON por stdout.
+
+```bash
+echo '{"mode":"mst","input":{"nodes":[0,1,2],"edges":[{"u":0,"v":1,"weight":4},{"u":1,"v":2,"weight":1},{"u":0,"v":2,"weight":3}]}}' | ./sentinel
+# {"cost":4,"edges":[[1,2,1],[0,2,3]],"elapsed_ms":0.001}
+
+# Técnica alternativa con input.algorithm (el autograder no lo envía):
+echo '{"mode":"mst","input":{"algorithm":"prim","nodes":[0,1,2],"edges":[{"u":0,"v":1,"weight":4},{"u":1,"v":2,"weight":1},{"u":0,"v":2,"weight":3}]}}' | ./sentinel
+
+# Desde un archivo:
+./sentinel < entrada.json
+```
+
+Los formatos de `input` y de salida de cada modo están en
+[Protocolo por modo](#protocolo-por-modo). Si el modo no existe o la entrada es
+inválida, imprime `{"error": "..."}` y termina con código 1.
+
+**Modo archivos** (formato de texto de la especificación, 9 líneas):
+
+```bash
+./sentinel tests/samples/transmission1.txt tests/samples/transmission2.txt \
+           tests/samples/mcode1.txt tests/samples/mcode2.txt tests/samples/mcode3.txt
+```
+
+El orden de los archivos importa: dos transmisiones y luego las tres firmas. Ver
+[Modo archivos](#modo-archivos).
+
+### 4. Pruebas
+
+```bash
+make test
+```
+
+Hace tres cosas y se detiene en el primer fallo:
+
+1. Compila y ejecuta las 7 suites de `tests/test_*.cpp` (los binarios y logs
+   quedan en `build/`); imprime la última línea de cada una.
+2. `python3 tests/grader_check.py ./sentinel src/main.cpp`: replica los
+   generadores, referencias y validadores del autograder, más el linter de estilo.
+3. Corre el modo archivos sobre `tests/samples/` y lo compara con
+   `expected_output.txt`.
+
+Para correr una sola suite:
+
+```bash
+mkdir -p build
+c++ -std=c++17 -O2 -Wall -Wextra -Wpedantic tests/test_max_flow.cpp -o build/test_max_flow
+./build/test_max_flow
+```
+
+### 5. App (SENTINEL Digital Twin)
+
+```bash
+make app
+# o, con otro puerto / host:
+python3 app/server.py --port 8080 --host 0.0.0.0
+```
+
+Abre http://127.0.0.1:8000 en el navegador y detén el servidor con `Ctrl+C`.
+
+- El servidor compila `./sentinel` solo si falta o si `src/` cambió, así que
+  `make` antes no es obligatorio.
+- `SENTINEL_BIN=/ruta/al/ejecutable python3 app/server.py` usa otro binario.
+- Si el puerto está ocupado (`Address already in use`), usa `--port` con otro
+  número.
+
+Lo que hay en cada pestaña está en [SENTINEL Digital Twin](#sentinel-digital-twin-app).
+
+### 6. Benchmarks y entregables
+
+```bash
+make bench                                      # completo (tarda varios minutos)
+python3 bench/benchmark.py ./sentinel --quick   # solo tamaños pequeños, para probar
+```
+
+**Sobrescribe** `results/benchmarks.md`, `results/benchmarks.csv` y
+`results/environment.md`. Mide memoria con `os.wait4`, así que solo funciona en
+macOS/Linux.
+
+```bash
+make grader-zip        # -> dist/sentinela_grader.zip, para el autograder
+make deliverable-zip   # -> dist/sentinela_entrega.zip, para Canvas
+```
+
+El ZIP del autograder deja fuera `tests/*.cpp` a propósito: el autograder
+exige que `src/main.cpp` sea el único `.cpp`.
+
+### 7. Windows (sin make)
+
+Con MinGW-w64 (g++) en PowerShell:
+
+```powershell
+g++ -std=c++17 -O2 -Wall -Wextra -Wpedantic src/main.cpp -o sentinel.exe
+'{"mode":"flow","input":{"n":2,"edges":[{"u":0,"v":1,"capacity":5}],"source":0,"sink":1}}' | .\sentinel.exe
+
+python tests/grader_check.py .\sentinel.exe src/main.cpp
+
+$env:SENTINEL_BIN = "$PWD\sentinel.exe"; python app/server.py
+```
+
+Hay que definir `SENTINEL_BIN`, porque el servidor busca `sentinel` sin la
+extensión `.exe`. `make bench` no funciona en Windows; usa WSL para los
+benchmarks.
 
 ## Estructura
 
