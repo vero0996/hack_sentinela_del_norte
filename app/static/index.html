@@ -34,6 +34,14 @@
     <!-- Network Explorer -->
     <section id="tab-explorer" class="panel active">
       <div class="explorer">
+        <aside class="sidebar links-sidebar">
+          <div class="card">
+            <h2>Enlaces activos</h2>
+            <p class="muted small">Desmarca un enlace para dejarlo inactivo; las capas se recalculan en C++.</p>
+            <button class="ghost" id="links-reset">Reactivar todos</button>
+            <div class="link-list"></div>
+          </div>
+        </aside>
         <div id="map"></div>
         <aside class="sidebar">
           <div class="card">
@@ -156,7 +164,7 @@
         <div class="card">
           <h2>Enlaces (simula una falla)</h2>
           <p class="muted small">Desactiva enlaces para simular el Blackout Scenario; las capas se recalculan en C++.</p>
-          <div id="link-list" class="link-list"></div>
+          <div class="link-list"></div>
         </div>
         <div class="card wide">
           <h2>Comparar escenarios</h2>

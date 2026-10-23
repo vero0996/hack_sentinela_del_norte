@@ -416,13 +416,16 @@ function renderScenarioList() {
 
 function renderLinkList() {
   const all = [...state.data.edges, ...state.data.removed_edges].sort((a, b) => a.key.localeCompare(b.key));
-  $("#link-list").innerHTML = all.map((edge) => {
+  const html = all.map((edge) => {
     const active = !state.data.removed_edges.some((removed) => removed.key === edge.key);
     const forced = !active && !state.disabled.has(edge.key);
     return `<label title="${forced ? "Eliminado por el escenario" : ""}"><input type="checkbox" data-key="${edge.key}" ${active ? "checked" : ""} ${forced ? "disabled" : ""}>
       ${edge.u}–${edge.v} <span class="muted">${edge.capacity}G</span></label>`;
   }).join("");
-  $$("#link-list input").forEach((box) => box.addEventListener("change", async () => {
+  // La misma lista aparece en el Network Explorer y en el Scenario Manager.
+  $$(".link-list").forEach((list) => { list.innerHTML = html; });
+  $("#links-reset").disabled = state.disabled.size === 0;
+  $$(".link-list input").forEach((box) => box.addEventListener("change", async () => {
     if (box.checked) {
       state.disabled.delete(box.dataset.key);
     } else {
@@ -431,6 +434,11 @@ function renderLinkList() {
     await safely(loadScenario);
   }));
 }
+
+$("#links-reset").addEventListener("click", async () => {
+  state.disabled.clear();
+  await safely(loadScenario);
+});
 
 async function selectScenario(id) {
   if (id === "__custom") {
