@@ -340,6 +340,13 @@ que cumple la desigualdad triangular. También leería el JSON en
 streaming, porque el árbol de entrada domina la memoria (166 MB con
 224 000 aristas) y no el algoritmo en sí.
 
+**Fernando Hernandez Cantu (A00841856) — Cybersecurity Algorithms.**
+En esta evidencia principalmente aprendi y reforce los algoritmos de busqueda de patrones en cadenas de texto. vi como busquedas tipo patrones en un texto, palindromos y subcadenas comunes pueden ser resueltos de manera eficiente con algoritmos como KMP, Manacher y autómatas de sufijos. Aprendí que la elección del algoritmo depende del tamaño de la entrada y de las restricciones de memoria, ya que algunos algoritmos son más rápidos pero consumen más memoria, mientras que otros son más lentos pero más eficientes en términos de espacio.
+
+Defenderia el uso eficiente de algoritmos en este tipo de busquedas, ya que para hacer analisis continue de paquetes de todo lo que sale y entra en la red, es importante tener algoritmos que sean eficientes y que puedan manejar grandes cantidades de datos sin consumir demasiada memoria. 
+
+Si tuvieramos mas tiempo mejoraria mas la interfaz de usuario para que sea mas amigable y facil de usar, y agregaria mas visualizaciones para que los usuarios puedan entender mejor los resultados de los algoritmos y como se aplican a la seguridad cibernetica.
+
 ---
 
 ## Referencias
